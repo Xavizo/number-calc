@@ -1,0 +1,69 @@
+buildscript{
+    ext {
+        springBootVersion = '2.2.4.RELEASE'
+    }
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            url = uri('http://repo.spring.io/plugins-release')
+        }
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}"
+    }
+}
+
+
+repositories {
+    mavenCentral()
+}
+
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+
+configurations {
+    generatedImplementation.extendsFrom implementation
+    generatedRuntimeOnly.extendsFrom runtimeOnly
+}
+
+test {
+    useJUnitPlatform()
+    systemProperty 'junit.jupiter.execution.timeout.default', project.property('test.timeout.default')
+}
+
+task integrationTest(type: Test){
+    useJUnitPlatform{
+        includeTags 'integration'
+    }
+    check.dependsOn integrationTest
+    shouldRunAfter test
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'org.springframework.cloud:spring-cloud-dependencies:Hoxton.SR1'
+    }
+}
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    implementation 'com.google.code.gson:gson:2.8.4'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor "org.projectlombok:lombok"
+}
+
+defaultTasks 'clean', 'assemble', 'test', 'integrationTest'
+group = 'org.decerto'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '1.8'
+
+
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
